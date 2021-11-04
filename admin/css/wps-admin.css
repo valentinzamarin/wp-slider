@@ -1,4 +1,45 @@
-/**
- * All of the CSS for your admin-specific functionality should be
- * included in this file.
- */
+body.dragging,
+body.dragging * {
+  cursor: move !important;
+}
+
+.dragged {
+  position: absolute;
+  opacity: 0.5;
+  z-index: 2000;
+}
+
+.wps-slides {
+  margin-top: 50px;
+  border: 1px solid #c3c4c7;
+  overflow: hidden;
+}
+.wps-slides__head {
+  font-weight: bold;
+}
+.wps-slides__head,
+.wps-slides__item {
+  display: flex;
+  border-bottom: 1px solid #c3c4c7;
+  background-color: #fff;
+}
+.wps-slides__item:last-child {
+  border-bottom: none;
+}
+.wps-slides__col {
+  width: 20%;
+  max-width: 20%;
+  flex: 0 0 20%;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+}
+.wps-slides__center{
+  justify-content: center;
+}
+.wps-slides__col img {
+  width: 250px;
+  height: 150px;
+  object-fit: cover;
+  object-position: center;
+}

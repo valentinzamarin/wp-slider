@@ -1,4 +1,16 @@
-/**
- * All of the CSS for your public-facing functionality should be
- * included in this file.
- */
+.swiper-slide{
+    height: 500px;
+    padding: 150px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    color: #fff;
+}
+.swiper-slide a{
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: none;
+    padding: 15px;
+}

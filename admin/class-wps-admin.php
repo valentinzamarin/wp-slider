@@ -1,52 +1,10 @@
 <?php
 
-/**
- * The admin-specific functionality of the plugin.
- *
- * @link       https://github.com/valentinzm
- * @since      1.0.0
- *
- * @package    Wps
- * @subpackage Wps/admin
- */
-
-/**
- * The admin-specific functionality of the plugin.
- *
- * Defines the plugin name, version, and two examples hooks for how to
- * enqueue the admin-specific stylesheet and JavaScript.
- *
- * @package    Wps
- * @subpackage Wps/admin
- * @author     valentine <zamarin.dev@gmail.com>
- */
 class Wps_Admin {
 
-	/**
-	 * The ID of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
-	 */
 	private $plugin_name;
-
-	/**
-	 * The version of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
-	 */
 	private $version;
 
-	/**
-	 * Initialize the class and set its properties.
-	 *
-	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
-	 */
 	public function __construct( $plugin_name, $version ) {
 
 		$this->plugin_name = $plugin_name;
@@ -54,49 +12,117 @@ class Wps_Admin {
 
 	}
 
-	/**
-	 * Register the stylesheets for the admin area.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_styles() {
+	public function plugin_admin_page() {
+		
+		add_menu_page(
+			'WP Slider',
+			'WP Slider',
+			'manage_options',
+			'wp-slider',
+			array(
+				$this,
+				'plugin_admin_display',
+			)
+		);
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Wps_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Wps_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
+	}
+
+	public function plugin_admin_display() {
+
+		include WPS_PLUGIN_DIR . '/admin/partials/wps-admin-display.php';
+
+	}
+
+	public function plugin_admin_optins() {
+
+		$args = [
+			'default' => 3,
+		];
+		register_setting( 'wps-settings', 'wps_count', $args );
+		
+	}
+
+	public function plugin_refresh_list() {
+		check_ajax_referer( 'wps-nonce' );
+		
+		global $wpdb;
+		$table_name = WPS_PLUGIN_TABLE;
+		$wpdb->query("DELETE FROM $table_name");
+
+		$list = json_decode( stripslashes( $_POST['list'] ) );
+
+		foreach(  $list as $item ) {
+			$wpdb->insert(
+				WPS_PLUGIN_TABLE,
+				[
+					'idx'         => $item->idx,
+					'title'       => $item->title,
+					'description' => $item->descr,
+					'link'        => $item->link,
+					'image'       => $item->img,
+				]
+			);
+		}
+		wp_send_json_success();
+	}
+
+	public function plugin_add_slider() {
+		check_ajax_referer( 'wps-nonce' );
+
+		require_once( ABSPATH . 'wp-admin/includes/file.php' );  
+		
+		$index = stripslashes( $_POST['idx'] );
+		$name  = stripslashes( $_POST['name'] );
+		$descr = stripslashes( $_POST['descr'] );
+		$link  = stripslashes( $_POST['link'] );
+		
+		if ( isset( $_FILES['image'] ) ) {
+			$upload_dir = wp_upload_dir();
+	 
+			if ( ! empty( $upload_dir['basedir'] ) ) {
+				$user_dirname = $upload_dir['basedir'] . '/' . WPS_PLUGIN_FOLDER;
+				if ( ! file_exists( $user_dirname ) ) {
+					wp_mkdir_p( $user_dirname );
+				}
+				$filename = wp_unique_filename( $user_dirname, $_FILES['image']['name'] );
+				move_uploaded_file( $_FILES['image']['tmp_name'], $user_dirname .'/'. $filename);
+				$filepath = $upload_dir['baseurl'] .'/' . WPS_PLUGIN_FOLDER . '/'. $filename;
+			}
+		}
+
+		global $wpdb;
+
+		$wpdb->insert(
+			WPS_PLUGIN_TABLE,
+			[
+				'idx'         => $index,
+				'title'       => $name,
+				'description' => $descr,
+				'link'        => $link,
+				'image'       => $filepath,
+			]
+		);
+		wp_send_json_success();
+		
+	}
+
+	public function enqueue_styles() {
 
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/wps-admin.css', array(), $this->version, 'all' );
 
 	}
 
-	/**
-	 * Register the JavaScript for the admin area.
-	 *
-	 * @since    1.0.0
-	 */
 	public function enqueue_scripts() {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Wps_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Wps_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wps-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/wps-admin.js', array( 'jquery', 'jquery-ui-sortable' ), $this->version, true );
+		wp_localize_script(
+			$this->plugin_name,
+			'wps_ajax',
+			[
+				'nonce' => wp_create_nonce( 'wps-nonce' ),
+				'url'   => admin_url( 'admin-ajax.php' ),
+			]
+		);
 
 	}
 
